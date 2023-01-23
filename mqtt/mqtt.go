@@ -14,7 +14,6 @@ const (
 )
 
 /* ------------------------------- Public API ------------------------------- */
-
 type CallbackFunc = func([]byte)
 type Client interface {
 	Pub(topic string, qos byte, retained bool, payload interface{}) error
