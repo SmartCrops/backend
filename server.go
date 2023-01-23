@@ -25,7 +25,7 @@ func (s *Server) Start(addr string) error {
 	mux.HandleFunc("/water", wrapHandB(s.handleWater))
 	mux.HandleFunc("/echo", wrapHandB(s.handleEcho))
 
-	return http.ListenAndServe(addr, mux)
+	return http.ListenAndServe(addr, cors(mux))
 }
 
 /* -------------------------------------------------------------------------- */
@@ -56,4 +56,15 @@ func (s *Server) handleWater(seconds uint) (string, int, error) {
 		return "", http.StatusInternalServerError, err
 	}
 	return "Ok", http.StatusOK, nil
+}
+
+/* -------------------------------------------------------------------------- */
+/* ----------------------------- CORS Middleware ---------------------------- */
+/* -------------------------------------------------------------------------- */
+
+func cors(hand http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		hand.ServeHTTP(w, r)
+	})
 }
