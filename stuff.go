@@ -64,7 +64,7 @@ func adjustHumidity(lastMeasId string, db *sql.DB, client mqtt.Client, optimHumi
 			return lastMeasId
 		}
 
-		secs := uint(optimHumi - currHumi)
+		secs := uint(((optimHumi - currHumi) / 100) * 10)
 		err = sendWaterCommand(client, secs)
 		if err != nil {
 			log.Println(err)
