@@ -13,6 +13,7 @@ import (
 /* -------------------------------------------------------------------------- */
 
 type Meas struct {
+	Id    string
 	Light uint
 	Preas float32
 	Humi  float32 // Percents
@@ -22,7 +23,7 @@ type Meas struct {
 
 func getMeasurements(db *sql.DB) ([]Meas, error) {
 	results, err := db.Query(
-		"SELECT Light_Intensity, Pressure, Soil_Humidity, Temperature, ts FROM Measurements ORDER BY ts DESC LIMIT 10",
+		"SELECT Id, Light_Intensity, Pressure, Soil_Humidity, Temperature, ts FROM Measurements ORDER BY ts DESC LIMIT 10",
 	)
 	if err != nil {
 		return nil, err
@@ -30,7 +31,7 @@ func getMeasurements(db *sql.DB) ([]Meas, error) {
 	var measurements []Meas
 	for results.Next() {
 		var meas Meas
-		err = results.Scan(&meas.Light, &meas.Preas, &meas.Humi, &meas.Temp, &meas.Time)
+		err = results.Scan(&meas.Id, &meas.Light, &meas.Preas, &meas.Humi, &meas.Temp, &meas.Time)
 		if err != nil {
 			return nil, err
 		}
@@ -49,20 +50,26 @@ func sendWaterCommand(client mqtt.Client, seconds uint) error {
 	return client.Pub(topic, 1, false, payload)
 }
 
-func adjustHumidity(db *sql.DB, client mqtt.Client, optimHumi float32) {
+func adjustHumidity(lastMeasId string, db *sql.DB, client mqtt.Client, optimHumi float32) string {
 	measurements, err := getMeasurements(db)
 	if err != nil {
 		log.Println(err)
-		return
+		return ""
 	}
 	currHumi := measurements[len(measurements)-1].Humi
-	if currHumi >= optimHumi {
-		return
-	}
+	currId := measurements[len(measurements)-1].Id
+	if lastMeasId != currId {
+		lastMeasId := currId
+		if currHumi >= optimHumi {
+			return lastMeasId
+		}
 
-	secs := uint(optimHumi - currHumi)
-	err = sendWaterCommand(client, secs)
-	if err != nil {
-		log.Println(err)
+		secs := uint(optimHumi - currHumi)
+		err = sendWaterCommand(client, secs)
+		if err != nil {
+			log.Println(err)
+		}
+
 	}
+	return lastMeasId
 }

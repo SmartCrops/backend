@@ -12,6 +12,7 @@ import (
 
 func run() error {
 	var optimHumi float32 = 50.0 // Optimal humidity
+	var lastMeasId string = ""
 
 	/* ----------------------------- Conenct to MQTT ---------------------------- */
 	mqttClient, err := mqtt.Connect("tcp://172.111.242.63:6666", "roslina", "smartcrops")
@@ -31,7 +32,9 @@ func run() error {
 	go func() {
 		for {
 			time.Sleep(time.Second)
-			adjustHumidity(db, mqttClient, optimHumi)
+
+			lastMeasId = adjustHumidity(lastMeasId, db, mqttClient, optimHumi)
+			log.Println(lastMeasId)
 		}
 	}()
 
