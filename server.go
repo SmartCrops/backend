@@ -50,7 +50,7 @@ func (s *Server) handleSetOptimalHumidity(value float32) (string, int, error) {
 }
 
 func (s *Server) handleWater(seconds uint) (string, int, error) {
-	err := sendWaterCommand(s.MQTT, 1)
+	err := sendWaterCommand(s.MQTT, seconds)
 	if err != nil {
 		err = fmt.Errorf("failed to send the watering command: %w", err)
 		return "", http.StatusInternalServerError, err
