@@ -71,5 +71,5 @@ func adjustHumidity(lastMeasId string, db *sql.DB, client mqtt.Client, optimHumi
 		}
 
 	}
-	return lastMeasId
+	return currId
 }
